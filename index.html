@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="The Royal Hotel — fine dining and royal hospitality.">
+<title>The Royal Hotel | Fine Dining</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="nav">
+<a class="brand" href="#home">THE <span>ROYAL</span> HOTEL</a>
+<button class="menu-toggle" aria-label="Menu">☰</button>
+<nav>
+<a href="#menu">Menu</a><a href="#story">Our Story</a><a href="#experience">Experience</a><a href="#reviews">Reviews</a><a class="nav-cta" href="#reserve">Reserve</a>
+</nav>
+</header>
+<main>
+<section id="home" class="hero">
+<div class="hero-content">
+<p class="eyebrow">THE ROYAL HOTEL • FINE DINING</p>
+<h1>Where <em>royalty</em><br>meets taste.</h1>
+<p class="hero-text">A warm, modern dining destination where timeless Indian flavours meet thoughtful global cuisine.</p>
+<div class="actions"><a class="button primary" href="#reserve">Reserve a Table</a><a class="button ghost" href="#menu">Explore Menu</a></div>
+</div>
+<div class="hero-card"><span>OPEN TODAY</span><strong>12:00 PM — 11:30 PM</strong><small>Last seating at 10:45 PM</small></div>
+</section>
+
+<section id="story" class="section split">
+<div><p class="eyebrow">THE ROYAL TABLE</p><h2>Made for memorable evenings.</h2></div>
+<div class="copy"><p>At The Royal Hotel, every plate is designed to feel familiar yet unexpected. We pair classic Indian hospitality with seasonal ingredients, elegant presentation and attentive service.</p><p>Whether it is a quiet dinner, a family celebration or an important business evening, our table is ready.</p></div>
+</section>
+
+<section id="menu" class="section dark-section">
+<div class="section-heading"><div><p class="eyebrow">FROM OUR KITCHEN</p><h2>The Royal Menu</h2></div><p>Prices in INR • Taxes may apply</p></div>
+<div id="menu-grid" class="menu-grid"><p class="loading">Loading menu...</p></div>
+</section>
+
+<section id="experience" class="section">
+<div class="section-heading"><div><p class="eyebrow">DINING YOUR WAY</p><h2>Royal experiences</h2></div></div>
+<div id="experience-grid" class="experience-grid"></div>
+</section>
+
+<section id="reserve" class="section reserve-section">
+<div class="reserve-copy"><p class="eyebrow">YOUR TABLE AWAITS</p><h2>Make an enquiry.</h2><p>Tell us when you would like to dine and our team will get in touch to confirm your table.</p></div>
+<form id="enquiry-form" class="form">
+<div class="two"><label>Name<input name="name" required maxlength="80" placeholder="Your name"></label><label>Email<input name="email" type="email" required maxlength="160" placeholder="you@example.com"></label></div>
+<div class="three"><label>Phone<input name="phone" maxlength="30" placeholder="+91"></label><label>Date<input name="date" type="date"></label><label>Guests<input name="guests" type="number" min="1" max="50" placeholder="2"></label></div>
+<label>Message<textarea name="message" required maxlength="1500" rows="5" placeholder="Special occasion, seating request, dietary note..."></textarea></label>
+<button class="button primary" type="submit">Send Enquiry</button><p id="enquiry-status" class="status"></p>
+</form>
+</section>
+
+<section id="reviews" class="section dark-section">
+<div class="section-heading"><div><p class="eyebrow">FROM OUR GUESTS</p><h2>What they say</h2></div></div>
+<div id="reviews-list" class="reviews-list"><p class="loading">Loading reviews...</p></div>
+<form id="review-form" class="review-form"><h3>Leave a review</h3>
+<div class="two"><label>Name<input name="name" maxlength="80" placeholder="Anonymous"></label><label>Rating<select name="rating" required><option value="">Choose</option><option value="5">★★★★★</option><option value="4">★★★★☆</option><option value="3">★★★☆☆</option><option value="2">★★☆☆☆</option><option value="1">★☆☆☆☆</option></select></label></div>
+<label>Review<textarea name="message" required maxlength="1000" rows="4" placeholder="Share your experience"></textarea></label>
+<button class="button ghost" type="submit">Post Review</button><p id="review-status" class="status"></p></form>
+</section>
+</main>
+<footer><div><a class="brand" href="#home">THE <span>ROYAL</span> HOTEL</a><p>Fine dining • Warm hospitality • Memorable evenings</p></div><div class="footer-right"><p>New Delhi, India</p><p>+91 11 4000 0000</p></div></footer>
+<script src="/app.js" defer></script>
+</body></html>

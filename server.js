@@ -1,270 +1,143 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const path = require('path');
-require('dotenv').config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const path = require("path");
+require("dotenv").config();
 
 const app = express();
-
-// ==================== MIDDLEWARE ====================
+const PORT = process.env.PORT || 3000;
+const publicDir = path.join(__dirname, "public");
 
 app.use(cors());
-app.use(express.json());
-
-// IMPORTANT:
-// server.js is in the ROOT folder.
-// public is directly inside the ROOT folder.
-const publicPath = path.join(__dirname, 'public');
-
-app.use(express.static(publicPath));
-
-// ==================== ROOMS ====================
-
-const rooms = [
-  {
-    id: 'comfort',
-    name: 'Comfort Standard',
-    audience: 'Smart value',
-    price: 3499,
-    description:
-      'A clean, comfortable stay with everything you need for a relaxed trip.',
-    features: [
-      'Queen bed',
-      'Breakfast for 2',
-      'Wi-Fi',
-      'Smart TV',
-      'Work desk'
-    ]
-  },
-  {
-    id: 'executive',
-    name: 'Executive Deluxe',
-    audience: 'Upper-middle class',
-    price: 6499,
-    description:
-      'More space, premium interiors and thoughtful extras for business or leisure.',
-    features: [
-      'King bed',
-      'Breakfast for 2',
-      'High-speed Wi-Fi',
-      'Mini fridge',
-      'City-view balcony',
-      'Airport transfer'
-    ]
-  },
-  {
-    id: 'royal',
-    name: 'Royal Suite',
-    audience: 'Luxury stay',
-    price: 12999,
-    description:
-      'Our signature suite with elegant living space and elevated hospitality.',
-    features: [
-      'King bed',
-      'Separate living room',
-      'Premium breakfast',
-      'Bathtub',
-      'Lounge access',
-      'Butler-style service'
-    ]
-  }
-];
-
-app.get('/api/rooms', (req, res) => {
-  res.json(rooms);
-});
-
-// ==================== AMENITIES ====================
-
-app.get('/api/amenities', (req, res) => {
-  res.json([
-    {
-      icon: '◈',
-      title: 'Infinity Pool',
-      text: 'A calm rooftop pool with sunset views.'
-    },
-    {
-      icon: '⌁',
-      title: 'Wellness Studio',
-      text: 'Gym, yoga corner and relaxing spa treatments.'
-    },
-    {
-      icon: '✦',
-      title: 'All-day Dining',
-      text: 'Indian and international dishes made fresh.'
-    },
-    {
-      icon: '◉',
-      title: 'Fast Wi-Fi',
-      text: 'Reliable high-speed Wi-Fi throughout the hotel.'
-    },
-    {
-      icon: '◇',
-      title: 'Airport Transfers',
-      text: 'Comfortable pickup and drop-off on request.'
-    },
-    {
-      icon: '♢',
-      title: '24/7 Concierge',
-      text: 'Local recommendations and support, anytime.'
-    }
-  ]);
-});
-
-// ==================== MONGODB ====================
+app.use(express.json({ limit: "1mb" }));
+app.use(express.static(publicDir));
 
 const reviewSchema = new mongoose.Schema({
-  rating: {
-    type: Number,
-    min: 1,
-    max: 5,
-    required: true
-  },
+  name: { type: String, default: "Anonymous", maxlength: 80, trim: true },
+  rating: { type: Number, min: 1, max: 5, required: true },
+  message: { type: String, required: true, maxlength: 1000, trim: true },
+  createdAt: { type: Date, default: Date.now }
+}, { versionKey: false });
 
-  message: {
-    type: String,
-    required: true,
-    maxlength: 1000
-  },
+const enquirySchema = new mongoose.Schema({
+  name: { type: String, required: true, maxlength: 80, trim: true },
+  email: { type: String, required: true, maxlength: 160, trim: true },
+  phone: { type: String, maxlength: 30, trim: true },
+  date: { type: String, maxlength: 30, trim: true },
+  guests: { type: Number, min: 1, max: 50 },
+  message: { type: String, required: true, maxlength: 1500, trim: true },
+  createdAt: { type: Date, default: Date.now }
+}, { versionKey: false });
 
-  roomType: {
-    type: String,
-    default: 'General'
-  },
+const Review = mongoose.model("Review", reviewSchema);
+const Enquiry = mongoose.model("Enquiry", enquirySchema);
 
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true, mongodb: mongoose.connection.readyState === 1 });
 });
 
-const Review = mongoose.model('Review', reviewSchema);
+app.get("/api/menu", (req, res) => res.json([
+  { category: "Starters", items: [
+    { name: "Royal Paneer Tikka", price: 499, description: "Charred cottage cheese, saffron yoghurt and herbs." },
+    { name: "Tandoori Prawns", price: 699, description: "Smoked prawns, royal spice glaze and lemon." },
+    { name: "Crispy Lotus Stem", price: 399, description: "Lotus stem, sesame, chilli and honey." }
+  ]},
+  { category: "Mains", items: [
+    { name: "Dal Royal", price: 449, description: "Slow-cooked black lentils finished with butter and cream." },
+    { name: "Murgh Angare", price: 699, description: "Tandoori chicken, rich tomato gravy and kasuri methi." },
+    { name: "Royal Vegetable Biryani", price: 549, description: "Aromatic basmati rice, vegetables, saffron and raita." }
+  ]},
+  { category: "Desserts", items: [
+    { name: "Saffron Gulab Jamun", price: 299, description: "Warm gulab jamun, saffron rabri and pistachio." },
+    { name: "Royal Chocolate Torte", price: 349, description: "Dark chocolate, sea salt and vanilla cream." }
+  ]}
+]));
 
-// Get reviews
-app.get('/api/reviews', async (req, res) => {
+app.get("/api/experiences", (req, res) => res.json([
+  { name: "Royal Dining", audience: "SIGNATURE", price: "₹1,499 onwards", description: "Elegant dining with Indian and international favourites." },
+  { name: "Chef's Table", audience: "EXCLUSIVE", price: "₹2,999 per guest", description: "A curated tasting experience for special occasions." },
+  { name: "Private Dining", audience: "CELEBRATIONS", price: "₹4,999 onwards", description: "A refined private setting for celebrations and business dinners." }
+]));
+
+app.get("/api/reviews", async (req, res) => {
+  if (mongoose.connection.readyState !== 1) return res.json([]);
   try {
-    const reviews = await Review.find()
-      .sort({ createdAt: -1 })
-      .limit(20)
-      .select('-__v');
-
-    res.json(reviews);
+    res.json(await Review.find().sort({ createdAt: -1 }).limit(30));
   } catch (error) {
-    console.error('Review load error:', error);
-
-    res.status(500).json({
-      error: 'Could not load reviews'
-    });
+    console.error(error.message);
+    res.status(500).json({ error: "Could not load reviews." });
   }
 });
 
-// Add review
-app.post('/api/reviews', async (req, res) => {
+app.post("/api/reviews", async (req, res) => {
+  if (mongoose.connection.readyState !== 1)
+    return res.status(503).json({ error: "Reviews are temporarily unavailable." });
+
+  const { name, rating, message } = req.body;
+  const r = Number(rating);
+  if (!Number.isInteger(r) || r < 1 || r > 5 || !String(message || "").trim())
+    return res.status(400).json({ error: "Please provide a rating from 1 to 5 and a message." });
+
   try {
-    const { rating, message, roomType } = req.body;
-
-    if (
-      !rating ||
-      !message ||
-      Number(rating) < 1 ||
-      Number(rating) > 5
-    ) {
-      return res.status(400).json({
-        error: 'Rating and message are required.'
-      });
-    }
-
-    const cleanMessage = String(message).trim();
-
-    if (!cleanMessage) {
-      return res.status(400).json({
-        error: 'Message cannot be empty.'
-      });
-    }
-
     const review = await Review.create({
-      rating: Number(rating),
-      message: cleanMessage,
-      roomType: roomType || 'General'
+      name: String(name || "Anonymous").trim() || "Anonymous",
+      rating: r,
+      message: String(message).trim()
     });
-
-    res.status(201).json({
-      ok: true,
-      review: {
-        rating: review.rating,
-        message: review.message,
-        roomType: review.roomType,
-        createdAt: review.createdAt
-      }
-    });
-
+    res.status(201).json({ ok: true, review });
   } catch (error) {
-    console.error('Review save error:', error);
-
-    res.status(500).json({
-      error: 'Could not save review. Check MongoDB connection.'
-    });
+    console.error(error.message);
+    res.status(500).json({ error: "Could not save review." });
   }
 });
 
-// ==================== CONTACT ====================
+app.post("/api/enquiries", async (req, res) => {
+  if (mongoose.connection.readyState !== 1)
+    return res.status(503).json({ error: "Enquiries are temporarily unavailable." });
 
-app.post('/api/contact', (req, res) => {
-  const { name, email, message } = req.body;
+  const { name, email, phone, date, guests, message } = req.body;
+  if (!String(name || "").trim() || !String(email || "").trim() || !String(message || "").trim())
+    return res.status(400).json({ error: "Name, email and message are required." });
 
-  if (!name || !email || !message) {
-    return res.status(400).json({
-      error: 'Please complete all fields.'
+  const g = guests === "" || guests == null ? undefined : Number(guests);
+  if (g !== undefined && (!Number.isInteger(g) || g < 1 || g > 50))
+    return res.status(400).json({ error: "Guests must be between 1 and 50." });
+
+  try {
+    const enquiry = await Enquiry.create({
+      name: String(name).trim(),
+      email: String(email).trim(),
+      phone: String(phone || "").trim(),
+      date: String(date || "").trim(),
+      guests: g,
+      message: String(message).trim()
     });
+    res.status(201).json({ ok: true, id: enquiry._id, message: "Thank you. Our team will contact you shortly." });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Could not save your enquiry." });
   }
-
-  console.log('Contact request:', {
-    name,
-    email,
-    message
-  });
-
-  res.json({
-    ok: true,
-    message: 'Thanks — our concierge will get back to you.'
-  });
 });
 
-// ==================== FRONTEND ====================
-
-// Send index.html for normal browser requests.
-// Do NOT use app.get('*') because newer Express routers can reject it.
+// Express 5 safe fallback — deliberately NOT app.get("*")
 app.use((req, res) => {
-  res.sendFile(path.join(publicPath, 'index.html'));
+  res.sendFile(path.join(publicDir, "index.html"));
 });
 
-// ==================== START SERVER ====================
-
-const port = process.env.PORT || 3000;
-
-async function startServer() {
-
+async function start() {
   if (process.env.MONGODB_URI) {
     try {
-      await mongoose.connect(process.env.MONGODB_URI);
-      console.log('MongoDB connected successfully');
+      await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
+      console.log("MongoDB connected successfully.");
     } catch (error) {
-      console.error(
-        'MongoDB connection failed:',
-        error.message
-      );
-
-      console.log('Continuing without MongoDB...');
+      console.error("MongoDB connection failed:", error.message);
     }
   } else {
-    console.log(
-      'MONGODB_URI not found. Running without MongoDB.'
-    );
+    console.log("MONGODB_URI not found. Running without MongoDB.");
   }
 
-  app.listen(port, '0.0.0.0', () => {
-    console.log(`Luxora Hotel running on port ${port}`);
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`The Royal Hotel running on port ${PORT}`);
   });
 }
-
-startServer();
+start().catch(error => { console.error(error); process.exit(1); });
