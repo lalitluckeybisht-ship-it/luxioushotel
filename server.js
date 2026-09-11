@@ -6,11 +6,17 @@ require('dotenv').config();
 
 const app = express();
 
+// ==================== MIDDLEWARE ====================
+
 app.use(cors());
 app.use(express.json());
 
-// Serve frontend files from /public
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// IMPORTANT:
+// server.js is in the ROOT folder.
+// public is directly inside the ROOT folder.
+const publicPath = path.join(__dirname, 'public');
+
+app.use(express.static(publicPath));
 
 // ==================== ROOMS ====================
 
@@ -105,7 +111,7 @@ app.get('/api/amenities', (req, res) => {
   ]);
 });
 
-// ==================== MONGODB REVIEW DATABASE ====================
+// ==================== MONGODB ====================
 
 const reviewSchema = new mongoose.Schema({
   rating: {
@@ -144,14 +150,15 @@ app.get('/api/reviews', async (req, res) => {
 
     res.json(reviews);
   } catch (error) {
-    console.error(error);
+    console.error('Review load error:', error);
+
     res.status(500).json({
       error: 'Could not load reviews'
     });
   }
 });
 
-// Add anonymous review
+// Add review
 app.post('/api/reviews', async (req, res) => {
   try {
     const { rating, message, roomType } = req.body;
@@ -167,9 +174,17 @@ app.post('/api/reviews', async (req, res) => {
       });
     }
 
+    const cleanMessage = String(message).trim();
+
+    if (!cleanMessage) {
+      return res.status(400).json({
+        error: 'Message cannot be empty.'
+      });
+    }
+
     const review = await Review.create({
       rating: Number(rating),
-      message: String(message).trim(),
+      message: cleanMessage,
       roomType: roomType || 'General'
     });
 
@@ -184,7 +199,7 @@ app.post('/api/reviews', async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Review save error:', error);
 
     res.status(500).json({
       error: 'Could not save review. Check MongoDB connection.'
@@ -194,7 +209,7 @@ app.post('/api/reviews', async (req, res) => {
 
 // ==================== CONTACT ====================
 
-app.post('/api/contact', async (req, res) => {
+app.post('/api/contact', (req, res) => {
   const { name, email, message } = req.body;
 
   if (!name || !email || !message) {
@@ -217,51 +232,39 @@ app.post('/api/contact', async (req, res) => {
 
 // ==================== FRONTEND ====================
 
-// FIXED: Don't use app.get('*') with the new router.
-// This middleware handles all other requests.
+// Send index.html for normal browser requests.
+// Do NOT use app.get('*') because newer Express routers can reject it.
 app.use((req, res) => {
-  res.sendFile(
-    path.join(__dirname, '..', 'public', 'index.html')
-  );
+  res.sendFile(path.join(publicPath, 'index.html'));
 });
 
 // ==================== START SERVER ====================
 
 const port = process.env.PORT || 3000;
 
-if (process.env.MONGODB_URI) {
+async function startServer() {
 
-  mongoose
-    .connect(process.env.MONGODB_URI)
-    .then(() => {
+  if (process.env.MONGODB_URI) {
+    try {
+      await mongoose.connect(process.env.MONGODB_URI);
       console.log('MongoDB connected successfully');
-
-      app.listen(port, () => {
-        console.log(`Luxora Hotel running on port ${port}`);
-      });
-    })
-    .catch((error) => {
+    } catch (error) {
       console.error(
         'MongoDB connection failed:',
         error.message
       );
 
-      app.listen(port, () => {
-        console.log(
-          `Running without MongoDB on port ${port}`
-        );
-      });
-    });
-
-} else {
-
-  console.log(
-    'MONGODB_URI not found. Running without MongoDB.'
-  );
-
-  app.listen(port, () => {
+      console.log('Continuing without MongoDB...');
+    }
+  } else {
     console.log(
-      `Luxora Hotel running on port ${port}`
+      'MONGODB_URI not found. Running without MongoDB.'
     );
+  }
+
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`Luxora Hotel running on port ${port}`);
   });
 }
+
+startServer();
